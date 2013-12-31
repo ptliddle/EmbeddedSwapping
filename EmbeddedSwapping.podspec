@@ -30,8 +30,8 @@ Pod::Spec.new do |s|
    }
    s.author       = { "Michael Luton" => "https://github.com/mluton" }
    s.source       = { :git => "https://github.com/mkutgt72/EmbeddedSwapping.git", :tag => "1.0" }
-   s.source_files = ['EmptySegue.{h,m}',
-   'ContainerViewController.{h,m}']
+   s.source_files = ['EmbeddedSwapping/EmptySegue.{h,m}',
+   'EmbeddedSwapping/ContainerViewController.{h,m}']
     s.ios.deployment_target = '5.0'
     s.requires_arc = true
   end
