@@ -8,93 +8,67 @@
 //
 
 #import "ContainerViewController.h"
-#import "FirstViewController.h"
-#import "SecondViewController.h"
 
-#define SegueIdentifierFirst @"embedFirst"
-#define SegueIdentifierSecond @"embedSecond"
-
-@interface ContainerViewController ()
-
-@property (strong, nonatomic) NSString *currentSegueIdentifier;
-@property (strong, nonatomic) FirstViewController *firstViewController;
-@property (strong, nonatomic) SecondViewController *secondViewController;
-@property (assign, nonatomic) BOOL transitionInProgress;
+@interface ContainerViewController () {
+    dispatch_queue_t serialTransitionQueue;
+}
 
 @end
 
 @implementation ContainerViewController
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
+@synthesize currentController=_currentController;
+@synthesize animationBlock=_animationBlock;
 
-    self.transitionInProgress = NO;
-    self.currentSegueIdentifier = SegueIdentifierFirst;
-    [self performSegueWithIdentifier:self.currentSegueIdentifier sender:nil];
+-(id)initWithCoder:(NSCoder *)aDecoder {
+    if (self = [super initWithCoder:aDecoder]) {
+        _animationBlock = ^void(UIViewController* container, UIViewController* fromViewController, UIViewController* toViewController) {
+            // no animation by default
+            [fromViewController removeFromParentViewController];
+            [container.view addSubview:toViewController.view];
+
+            [toViewController didMoveToParentViewController:container];
+        };
+
+        _currentController = nil;
+
+        serialTransitionQueue = dispatch_queue_create("com.EmbeddedSwapping.queue", DISPATCH_QUEUE_SERIAL);
+    }
+    
+    return self;
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    // Instead of creating new VCs on each seque we want to hang on to existing
-    // instances if we have it. Remove the second condition of the following
-    // two if statements to get new VC instances instead.
-    if (([segue.identifier isEqualToString:SegueIdentifierFirst]) && !self.firstViewController) {
-        self.firstViewController = segue.destinationViewController;
+    UIViewController* destController = segue.destinationViewController;
+    UIView* destView = destController.view;
+
+    destView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    destView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+
+    if (self.currentController == nil) {
+        [destController willMoveToParentViewController:self];
+
+        [self addChildViewController:destController];
+        [self.view addSubview:destView];
+
+        [destController didMoveToParentViewController:self];
+    } else {
+        [self moveFromViewController:self.currentController toViewController:destController];
     }
 
-    if (([segue.identifier isEqualToString:SegueIdentifierSecond]) && !self.secondViewController) {
-        self.secondViewController = segue.destinationViewController;
-    }
-
-    // If we're going to the first view controller.
-    if ([segue.identifier isEqualToString:SegueIdentifierFirst]) {
-        // If this is not the first time we're loading this.
-        if (self.childViewControllers.count > 0) {
-            [self swapFromViewController:[self.childViewControllers objectAtIndex:0] toViewController:self.firstViewController];
-        }
-        else {
-            // If this is the very first time we're loading this we need to do
-            // an initial load and not a swap.
-            [self addChildViewController:segue.destinationViewController];
-            UIView* destView = ((UIViewController *)segue.destinationViewController).view;
-            destView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            destView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-            [self.view addSubview:destView];
-            [segue.destinationViewController didMoveToParentViewController:self];
-        }
-    }
-    // By definition the second view controller will always be swapped with the
-    // first one.
-    else if ([segue.identifier isEqualToString:SegueIdentifierSecond]) {
-        [self swapFromViewController:[self.childViewControllers objectAtIndex:0] toViewController:self.secondViewController];
-    }
+    _currentController = destController;
 }
 
-- (void)swapFromViewController:(UIViewController *)fromViewController toViewController:(UIViewController *)toViewController
-{
-    toViewController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-    toViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+- (void)moveFromViewController:(UIViewController*)from toViewController:(UIViewController*)to {
+    dispatch_async(serialTransitionQueue, ^(void){
+        dispatch_sync(dispatch_get_main_queue(), ^(void){
+            [to willMoveToParentViewController:self];
 
-    [fromViewController willMoveToParentViewController:nil];
-    [self addChildViewController:toViewController];
-
-    [self transitionFromViewController:fromViewController toViewController:toViewController duration:1.0 options:UIViewAnimationOptionTransitionCrossDissolve animations:nil completion:^(BOOL finished) {
-        [fromViewController removeFromParentViewController];
-        [toViewController didMoveToParentViewController:self];
-        self.transitionInProgress = NO;
-    }];
-}
-
-- (void)swapViewControllers
-{
-    if (self.transitionInProgress) {
-        return;
-    }
-
-    self.transitionInProgress = YES;
-    self.currentSegueIdentifier = ([self.currentSegueIdentifier isEqualToString:SegueIdentifierFirst]) ? SegueIdentifierSecond : SegueIdentifierFirst;
-    [self performSegueWithIdentifier:self.currentSegueIdentifier sender:nil];
+            [self addChildViewController:to];
+            self.animationBlock(self, from, to);
+        });
+    });
 }
 
 @end
