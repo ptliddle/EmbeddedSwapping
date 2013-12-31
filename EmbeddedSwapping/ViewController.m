@@ -15,6 +15,7 @@ static NSString* const firstControllerSegueIdentifier = @"embedFirst";
 static NSString* const secondControllerSegueIdentifier = @"embedSecond";
 
 @interface ViewController ()
+
 @property (nonatomic, weak) ContainerViewController *containerViewController;
 
 - (IBAction)swapButtonPressed:(id)sender;
