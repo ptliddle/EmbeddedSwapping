@@ -8,10 +8,18 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol DelegateProtocol <NSObject>
+
+- (void)viewControllerWillBeginSegue:(UIViewController*)viewController withIdentifier:(NSString*)identifier;
+
+@end
+
 @interface ContainerViewController : UIViewController
 
-@property (nonatomic, strong, readonly) UIViewController* currentController;
+@property (nonatomic, weak, readonly) UIViewController* currentController;
 
 @property (nonatomic, strong) void(^animationBlock)(UIViewController* container, UIViewController* fromViewController, UIViewController* toViewController);
+
+@property (nonatomic, weak) NSObject<DelegateProtocol>* segueDelegate;
 
 @end

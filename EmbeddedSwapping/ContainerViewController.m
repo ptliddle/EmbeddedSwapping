@@ -19,6 +19,7 @@
 
 @synthesize currentController=_currentController;
 @synthesize animationBlock=_animationBlock;
+@synthesize segueDelegate=_segueDelegate;
 
 -(id)initWithCoder:(NSCoder *)aDecoder {
     if (self = [super initWithCoder:aDecoder]) {
@@ -34,14 +35,17 @@
 
         serialTransitionQueue = dispatch_queue_create("com.EmbeddedSwapping.queue", DISPATCH_QUEUE_SERIAL);
     }
-    
+
     return self;
 }
 
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     UIViewController* destController = segue.destinationViewController;
     UIView* destView = destController.view;
+
+    if (self.segueDelegate != nil) {
+        [self.segueDelegate viewControllerWillBeginSegue:destController withIdentifier:segue.identifier];
+    }
 
     destView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     destView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
@@ -61,8 +65,8 @@
 }
 
 - (void)moveFromViewController:(UIViewController*)from toViewController:(UIViewController*)to {
-    dispatch_async(serialTransitionQueue, ^(void){
-        dispatch_sync(dispatch_get_main_queue(), ^(void){
+    dispatch_async(serialTransitionQueue, ^(void) {
+        dispatch_sync(dispatch_get_main_queue(), ^(void) {
             [to willMoveToParentViewController:self];
 
             [self addChildViewController:to];
