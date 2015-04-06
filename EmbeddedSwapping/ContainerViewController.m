@@ -25,6 +25,7 @@
     if (self = [super initWithCoder:aDecoder]) {
         _animationBlock = ^void(UIViewController* container, UIViewController* fromViewController, UIViewController* toViewController) {
             // no animation by default
+            [fromViewController.view removeFromSuperview];
             [fromViewController removeFromParentViewController];
             [container.view addSubview:toViewController.view];
 
