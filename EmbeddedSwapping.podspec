@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "EmbeddedSwapping"
-  s.version      = "1.0"
+  s.version      = "1.11"
   s.summary      = "Container view controller which manage multiple child view controllers using storyboards"
   s.homepage     = "https://github.com/mkutgt72/EmbeddedSwapping"
   s.license      = {
@@ -29,7 +29,7 @@ Pod::Spec.new do |s|
     LICENSE
    }
    s.author       = { "Michael Luton" => "https://github.com/mluton" }
-   s.source       = { :git => "https://github.com/mkutgt72/EmbeddedSwapping.git", :tag => "1.0" }
+   s.source       = { :git => "https://github.com/ptliddle/EmbeddedSwapping.git", :tag => "1.11" }
    s.source_files = ['EmbeddedSwapping/EmptySegue.{h,m}',
    'EmbeddedSwapping/ContainerViewController.{h,m}']
     s.ios.deployment_target = '5.0'
